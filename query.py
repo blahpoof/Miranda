@@ -27,7 +27,7 @@ def print_query():
 			query[word] = query.get(word, 0) + 1
 
 	sorted_history = sorted(history.items(), key=lambda x:x[1], reverse=True ) # list of (key, value) of history sorted by word count
-	return template("keywords", d=query, l=sorted_history[:20]) # Creates tables using HTML template
+	return template("keywords", d=query, l=sorted_history[:20]) # http POST tables using HTML template
 	
 run(host='localhost', port=8080, debug=True, reloader=True)
 
