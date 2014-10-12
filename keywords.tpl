@@ -1,4 +1,4 @@
-<table style="float: left;" border='1' id="results">
+<table style="float: left;" border='0' id="results">
 	<caption><b>Results</b></caption>
 	%for key in d:
 		<tr>
@@ -7,7 +7,7 @@
 		</tr>
 	%end
 </table>
-<table style="float: left;" border='1' id="history">
+<table style="float: left;" border='0' id="history">
 	<caption><b>History</b></caption>
 	%for word in l:
 		<tr>
