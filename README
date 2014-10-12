@@ -1,0 +1,6 @@
+To run frontend:
+	$ python frontend/query.py
+
+To run backend unit tests:
+	$ python backend/test_crawler.py
+	
