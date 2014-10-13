@@ -1,6 +1,6 @@
-from bottle import route, run, debug, request, template
+from bottle import route, run, debug, request, template, static_file
 
-history = {} # Dictionary storing number of times each word has been searched since server start
+history = {} # number of times each word has been searched since server start
 
 @route('/')
 def query():
@@ -9,8 +9,8 @@ def query():
 
 	keywords = request.GET.get('keywords', '').strip()
 
-	if keywords: # A keyword string has been submitted
-		query = {} # Dictionary storing word count of keywords string 
+	if keywords: # a keyword string has been submitted
+		query = {} # word count of keywords string 
 		words = keywords.lower().strip().split() # list of keywords in lowercase form
 		
 		for word in words:
@@ -21,13 +21,19 @@ def query():
 		sorted_history = sorted(history.items(), key=lambda x:x[1], reverse=True ) # list of (word, count) of history sorted by count
 		return template("keywords", d=query, l=sorted_history[:20]) # display tables using HTML template
 	
-	else: # A keyword string has not been submitted
-		return '''
+	else: # a keyword string has not been submitted
+		# make form requesting keyword string 
+		return '''				
+			<img src="logo.png">
+
 			<form action='/', method="GET">
 				Keyword: <input name="keywords" type="text"/>
 				<input value="Submit" type="submit"/>
 			</form>
 		''' 
-	
+@route('/<filename:re:.*\.png>') 
+def send_image(filename): 
+    return static_file(filename, root='', mimetype='image/png') 
+
 run(host='localhost', port=8080, debug=False, reloader=True)
 
