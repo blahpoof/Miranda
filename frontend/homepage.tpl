@@ -23,7 +23,7 @@
 			<caption><b>Recently searched words</b></caption>
 		%for word in l:
 			<tr>
-				<td>{{word[0]}}</td>
+				<td>{{word}}</td>
 			</tr>
 		%end
 	</table>
