@@ -100,5 +100,5 @@ def signout():
 def send_image(filename): 
     return static_file(filename, root='', mimetype='image/png') 
 
-run(host='localhost', port=8080, debug=True, reloader=True)
+run(host='0.0.0.0', port=80, debug=False, reloader=True)
 
