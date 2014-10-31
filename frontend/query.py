@@ -8,7 +8,7 @@ import httplib2
 
 flow = flow_from_clientsecrets('client_secrets.json',
 		scope='https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/userinfo.email',
-		redirect_uri="http://localhost:8080/redirect")
+		redirect_uri="/redirect")
 
 UserList = []
 
