@@ -17,7 +17,7 @@ class User(object):
 	def __init__(self, credentials, email):
 		self.credentials = credentials
 		self.email = email
-		self.history = {}
+		self.history = []
 
 	def __eq__(self, other):
 		if isinstance(other, self.__class__):
@@ -47,19 +47,22 @@ def query():
 		for word in words:
 			# Add word to dictionaries, or increase count by 1 if already in dictionary
 			if curr_user:
-				curr_user.history[word] = curr_user.history.get(word, 0) + 1
+				if word in curr_user.history:
+					curr_user.history.remove(word)
+				curr_user.history.append(word)
+				while len(curr_user.history) > 10:
+					curr_user.history.pop(0)
 			query[word] = query.get(word, 0) + 1
 
 		if curr_user:
-			sort_hist = sorted(curr_user.history.items(), key=lambda x:x[1], reverse=True ) # list of (word, count) of history sorted by count
-			return template("keywords", signed_in=True, email=curr_user.email, d=query, l=sort_hist[:20]) # display tables using HTML template
+			return template("keywords", signed_in=True, email=curr_user.email, d=query) # display tables using HTML template
 		else:
 			return template("keywords", signed_in=False, d=query)
 	
 	else: # a keyword string has not been submitted
 		# make form requesting keyword string 
 		if curr_user:
-			return template("homepage", signed_in=True, email=curr_user.email)
+			return template("homepage", signed_in=True, email=curr_user.email, l=curr_user.history)
 		else:
 			return template("homepage", signed_in=False)
 
@@ -100,5 +103,6 @@ def signout():
 def send_image(filename): 
     return static_file(filename, root='', mimetype='image/png') 
 
-run(host='0.0.0.0', port=80, debug=False, reloader=True)
+# run(host='0.0.0.0', port=80, debug=False, reloader=True)
+run(host='localhost', port=8080, debug=True, reloader=True)
 

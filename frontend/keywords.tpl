@@ -16,15 +16,3 @@
 		</tr>
 	%end
 </table>
-%if signed_in:
-	<table style="float: left;" border='1' id="history">
-		%if l:
-			<caption><b>History</b></caption>
-		%for word in l:
-			<tr>
-				<td>{{word[0]}}</td>
-				<td>{{word[1]}}</td>
-			</tr>
-		%end
-	</table>
-%end

@@ -16,3 +16,15 @@
 	Keyword: <input name="keywords" type="text"/>
 	<input value="Submit" type="submit"/>
 </form>
+
+%if signed_in:
+	<table style="float: left;" border='1' id="history">
+		%if l:
+			<caption><b>Recently searched words</b></caption>
+		%for word in l:
+			<tr>
+				<td>{{word[0]}}</td>
+			</tr>
+		%end
+	</table>
+%end
