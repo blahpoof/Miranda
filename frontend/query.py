@@ -1,8 +1,11 @@
-from bottle import route, run, debug, request, template, static_file
+from bottle import route, run, debug, request, template, static_file, redirect
+from oauth2client.client import OAuth2WebServerFlow, flow_from_clientsecrets
+from googleapiclient.errors import HttpError
+from googleapiclient.discovery import build
 
 history = {} # number of times each word has been searched since server start
 
-@route('/')
+@route('/', 'GET')
 def query():
 	''' If a keyword string has been searched, returns an HTML table displaying the word count of the string, and another
 		HTML table displaying the top 20 most searched words. Otherwise, returns an HTML form requesting a keyword string. '''
@@ -31,9 +34,17 @@ def query():
 				<input value="Submit" type="submit"/>
 			</form>
 		''' 
+@route('/login', 'GET')
+def login():
+	flow = flow_from_clientsecrets('client_secrets.json',
+		scope='https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/userinfo.email',
+		redirect_uri="http://localhost:8080/redirect")
+	url = flow.step1_get_authorize_url()
+	redirect(str(url))
+
 @route('/<filename:re:.*\.png>') 
 def send_image(filename): 
     return static_file(filename, root='', mimetype='image/png') 
 
-run(host='localhost', port=8080, debug=False, reloader=True)
+run(host='localhost', port=8080, debug=True, reloader=True)
 
