@@ -6,14 +6,9 @@ from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
 import httplib2
 
-flow = flow_from_clientsecrets('client_secrets.json',
-		scope='https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/userinfo.email',
-		redirect_uri="http://ec2-54-172-241-148.compute-1.amazonaws.com/redirect")
-
-UserList = []
-
+# Classes -----------------------------------------
 class User(object):
-	"""docstring for User"""
+	''' Stores user information and history. '''
 	def __init__(self, credentials, email):
 		self.credentials = credentials
 		self.email = email
@@ -27,25 +22,39 @@ class User(object):
 
 	def __ne__(self, other):
 		return not self.__eq__(other)
+
+# Storage -----------------------------------------
+UserList = []
+
+# Routing -----------------------------------------
+
+# oauth2 flow
+flow = flow_from_clientsecrets('client_secrets.json',
+		scope='https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/userinfo.email',
+		redirect_uri="http://ec2-54-172-241-148.compute-1.amazonaws.com/redirect")
 		
 @route('/')
 def query():
-	''' If a keyword string has been searched, returns an HTML table displaying the word count of the string, and another
-		HTML table displaying the top 20 most searched words. Otherwise, returns an HTML form requesting a keyword string. '''
-	
-	keywords = request.GET.get('keywords', '').strip()
+	''' Creates query form and handles query requests based on whether or not user is signed in. '''
+		
+	# Check whether user is logged in
 	email = request.get_cookie("account", secret='secret_key')
 	curr_user = None
 	for user in UserList:
 		if email == user.email:
 			curr_user = user
 
-	if keywords: # a keyword string has been submitted
-		query = {} # word count of keywords string 
-		words = keywords.lower().strip().split() # list of keywords in lowercase form
+	# Check if query has been entered
+	keywords = request.GET.get('keywords', '').strip()
+
+	# Process query results
+	if keywords: 
+		query = {} 
+		words = keywords.lower().strip().split()
 		
 		for word in words:
-			# Add word to dictionaries, or increase count by 1 if already in dictionary
+			
+			# Update results and user history 
 			if curr_user:
 				if word in curr_user.history:
 					curr_user.history.remove(word)
@@ -59,8 +68,8 @@ def query():
 		else:
 			return template("keywords", signed_in=False, d=query)
 	
-	else: # a keyword string has not been submitted
-		# make form requesting keyword string 
+	# Display query form 
+	else: 
 		if curr_user:
 			return template("homepage", signed_in=True, email=curr_user.email, l=curr_user.history)
 		else:
@@ -73,25 +82,30 @@ def login():
 
 @route('/redirect')
 def redirect_page():
+	''' Handles oauth2 redirect and signs user in. Creates a new User object if that user has not previously signed in before. '''
+
+	# Obtain user code
 	code = request.query.get('code', '')
-
 	credentials = flow.step2_exchange(code)
-	# token = credentials.id_token['sub']
 
+	# Obtain user email
 	http=httplib2.Http()
 	http = credentials.authorize(http)
 	service = build('oauth2', 'v2', http=http);
 	document = service.userinfo().get().execute()
 	user_email = document['email']
 
+	# Sign in 
+	response.set_cookie("account", user_email, secret='secret_key')
+
+	# If user signed in for first time, make new User object
 	for user in UserList:
 		if user.email == user_email:
 			break
 	else:
 		new_user = User(credentials, user_email)
 		UserList.append(new_user)
-
-	response.set_cookie("account", user_email, secret='secret_key')
+	
 	return redirect('/')
 
 @route('/signout')
