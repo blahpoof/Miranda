@@ -31,7 +31,7 @@ UserList = []
 # oauth2 flow
 flow = flow_from_clientsecrets('client_secrets.json',
 		scope='https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/userinfo.email',
-		redirect_uri="http://ec2-54-172-241-148.compute-1.amazonaws.com/redirect")
+		redirect_uri="http://ec2-54-173-107-230.compute-1.amazonaws.com/redirect")
 		
 @route('/')
 def query():
