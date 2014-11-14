@@ -24,8 +24,6 @@ import urlparse
 from BeautifulSoup import *
 from collections import defaultdict
 import re
-import sqlite3 as lite
-from pagerank import page_rank
 
 def attr(elem, attr):
     """An html attribute from an html element. E.g. <a href="">, then
@@ -47,7 +45,6 @@ class crawler(object):
     def __init__(self, db_conn, url_file):
         """Initialize the crawler with a connection to the database to populate
         and with the file containing the list of seed URLs to begin indexing."""
-	self.links = [ ]
         self._url_queue = [ ]
         self._doc_id_cache = { }
         self._word_id_cache = { }
@@ -123,37 +120,28 @@ class crawler(object):
                     self._url_queue.append((self._fix_url(line.strip(), ""), 0))
         except IOError:
             pass
-
-	self.db_conn = db_conn
         
     
     # TODO remove me in real version
     def _mock_insert_document(self, url):
         """A function that pretends to insert a url into a document db table
         and then returns that newly inserted document's id."""
-	cur = self.db_conn.cursor()
-	cur.execute('INSERT INTO documents(url, pagerank) VALUES(?,0);', (url,))
-        cur.execute('SELECT doc_id FROM documents WHERE url=?', (url,))
-	ret_id = cur.fetchone()[0]
+        ret_id = self._mock_next_doc_id
+        self._mock_next_doc_id += 1
         return ret_id
     
     # TODO remove me in real version
     def _mock_insert_word(self, word):
         """A function that pretends to inster a word into the lexicon db table
         and then returns that newly inserted word's id."""
-        cur = self.db_conn.cursor()
-	cur.execute('INSERT INTO lexicon(word) VALUES(?);', (word,))
-        cur.execute('SELECT word_id FROM lexicon WHERE word=?', (word,))
-	ret_id = cur.fetchone()[0]
+        ret_id = self._mock_next_word_id
+        self._mock_next_word_id += 1
         return ret_id
     
     def word_id(self, word):
         """Get the word id of some specific word."""
-	cur = self.db_conn.cursor()
-	cur.execute('SELECT word_id FROM lexicon WHERE word=?', (word,))
-	word_id = cur.fetchone()
-        if word_id != None:
-            return word_id[0]
+        if word in self._word_id_cache:
+            return self._word_id_cache[word]
         
         # TODO: 1) add the word to the lexicon, if that fails, then the
         #          word is in the lexicon
@@ -166,11 +154,8 @@ class crawler(object):
     
     def document_id(self, url):
         """Get the document id for some url."""
-        cur = self.db_conn.cursor()
-	cur.execute('SELECT doc_id FROM documents WHERE url=?', (url,))
-	doc_id = cur.fetchone()
-        if doc_id != None:
-            return doc_id[0]
+        if url in self._doc_id_cache:
+            return self._doc_id_cache[url]
         
         # TODO: just like word id cache, but for documents. if the document
         #       doesn't exist in the db then only insert the url and leave
@@ -196,7 +181,7 @@ class crawler(object):
     def add_link(self, from_doc_id, to_doc_id):
         """Add a link into the database, or increase the number of links between
         two pages in the database."""
-        self.links.append((from_doc_id, to_doc_id))
+        # TODO
 
     def _visit_title(self, elem):
         """Called when visiting the <title> tag."""
@@ -336,10 +321,6 @@ class crawler(object):
     def crawl(self, depth=2, timeout=3):
         """Crawl the web!"""
         seen = set()
-	cur = self.db_conn.cursor()
-	cur.execute('CREATE TABLE IF NOT EXISTS lexicon(word_id INTEGER PRIMARY KEY, word TEXT);')
-	cur.execute('CREATE TABLE IF NOT EXISTS documents(doc_id INTEGER PRIMARY KEY, url TEXT, pagerank FLOAT);')
-	cur.execute('CREATE TABLE IF NOT EXISTS inverted(word_id INTEGER, doc_id INTEGER);')
 
         while len(self._url_queue):
 
@@ -379,24 +360,8 @@ class crawler(object):
                     socket.close()
 
 if __name__ == "__main__":
-    db_conn = lite.connect("dbFile.db")
-    bot = crawler(db_conn, "urls.txt")
+    bot = crawler(None, "urls.txt")
     bot.crawl(depth=0)
-    pagerank = page_rank(bot.links)
-    cur = db_conn.cursor()
-    for doc_id, rank in pagerank.iteritems():
-	try:
-	    doc_id = doc_id.item()
-	except:
-	    pass
-	try:
-	    rank = rank.item()
-	except:
-	    pass
-	print rank, doc_id
-        cur.execute('UPDATE documents SET pagerank=? WHERE doc_id=?;', (rank, doc_id))
     print bot.get_inverted_index()
     print bot.get_resolved_inverted_index()
-    db_conn.commit()
-    db_conn.close()
 
