@@ -166,6 +166,7 @@ class crawler(object):
     
     def document_id(self, url):
         """Get the document id for some url."""
+	url = url.encode('ascii', 'ignore')
         cur = self.db_conn.cursor()
 	cur.execute('SELECT doc_id FROM documents WHERE url=?', (url,))
 	doc_id = cur.fetchone()
@@ -232,6 +233,8 @@ class crawler(object):
             word_id = word[0]
         # if the word is already in the inverted index, add the doc_id to the set
         # otherwise create a new set for the word
+            cur = self.db_conn.cursor()
+            cur.execute('INSERT into INVERTED(word_id, doc_id) VALUES (?, ?)', (word_id, self._curr_doc_id,))
             if word_id in self._inverted_index:
                 self._inverted_index[word_id].add(self._curr_doc_id)
             else:
@@ -268,6 +271,7 @@ class crawler(object):
         words = WORD_SEPARATORS.split(elem.string.lower())
         for word in words:
             word = word.strip()
+            word = word.encode('ascii', 'ignore')
             if word in self._ignored_words:
                 continue
             word_id = self.word_id(word)
@@ -348,7 +352,7 @@ class crawler(object):
             # skip this url; it's too deep
             if depth_ > depth:
                 continue
-
+            url = url.encode('ascii', 'ignore')
             doc_id = self.document_id(url)
 
             # we've already seen this document
@@ -381,7 +385,7 @@ class crawler(object):
 if __name__ == "__main__":
     db_conn = lite.connect("dbFile.db")
     bot = crawler(db_conn, "urls.txt")
-    bot.crawl(depth=0)
+    bot.crawl(depth=1)
     pagerank = page_rank(bot.links)
     cur = db_conn.cursor()
     for doc_id, rank in pagerank.iteritems():
