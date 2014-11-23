@@ -1,9 +1,10 @@
-from bottle import route, run, debug, request, template, static_file, redirect, response
+from bottle import route, run, debug, request, template, static_file, redirect, response, error
 from oauth2client.client import OAuth2WebServerFlow
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.file import Storage
 from googleapiclient.errors import HttpError
 from googleapiclient.discovery import build
+import sqlite3 as sql
 import httplib2
 
 # Classes -----------------------------------------
@@ -26,6 +27,9 @@ class User(object):
 # Storage -----------------------------------------
 UserList = []
 
+db_conn = sql.connect("dbFile.db")
+cur = db_conn.cursor()
+
 # Routing -----------------------------------------
 
 # oauth2 flow
@@ -34,7 +38,7 @@ flow = flow_from_clientsecrets('client_secrets.json',
 		redirect_uri="http://ec2-54-173-107-230.compute-1.amazonaws.com/redirect")
 		
 @route('/')
-def query():
+def query_page():
 	''' Creates query form and handles query requests based on whether or not user is signed in. '''
 		
 	# Check whether user is logged in
@@ -47,36 +51,54 @@ def query():
 	# Check if query has been entered
 	keywords = request.GET.get('keywords', '').strip()
 
-	# Process query results
-	if keywords: 
-		query = {} 
-		words = keywords.lower().strip().split()
+	if keywords:
+		word = keywords.lower().strip().split()[0]
+		cur.execute('SELECT word_id FROM lexicon WHERE word=?', (word,))
+		word = cur.fetchone()[0]
+
+		doc_ids = []
+		urls = []
+		if word:
+			for row in cur.execute('SELECT doc_id FROM inverted WHERE word_id=?', (word,)):
+				doc_ids.append(row[0])
+
+			for doc_id in doc_ids:
+				for row in cur.execute('SELECT url FROM documents WHERE doc_id=? ORDER BY pagerank DESC', (doc_id,)):
+					urls.append(row[0])
+
+
 		
-		for word in words:
+
+	# Process query results
+	# if keywords: 
+	# 	query = {} 
+	# 	words = keywords.lower().strip().split()
+		
+	# 	for word in words:
 			
-			# Update results and user history 
-			if curr_user:
-				if word in curr_user.history:
-					curr_user.history.remove(word)
-				curr_user.history.append(word)
-				while len(curr_user.history) > 10:
-					curr_user.history.pop(0)
-			query[word] = query.get(word, 0) + 1
+	# 		# Update results and user history 
+	# 		if curr_user:
+	# 			if word in curr_user.history:
+	# 				curr_user.history.remove(word)
+	# 			curr_user.history.append(word)
+	# 			while len(curr_user.history) > 10:
+	# 				curr_user.history.pop(0)
+	# 		query[word] = query.get(word, 0) + 1
 
 		if curr_user:
-			return template("keywords", signed_in=True, email=curr_user.email, d=query) # display tables using HTML template
+			return template("keywords", signed_in=True, email=curr_user.email, l=urls) # display tables using HTML template
 		else:
-			return template("keywords", signed_in=False, d=query)
+			return template("keywords", signed_in=False, l=urls)
 	
 	# Display query form 
 	else: 
 		if curr_user:
-			return template("homepage", signed_in=True, email=curr_user.email, l=curr_user.history)
+			return template("homepage", signed_in=True, email=curr_user.email, l=curr_user.history, )
 		else:
 			return template("homepage", signed_in=False)
 
 @route('/login')
-def login():
+def login_page():
 	auth_uri = flow.step1_get_authorize_url()
 	redirect(str(auth_uri))
 
@@ -109,14 +131,18 @@ def redirect_page():
 	return redirect('/')
 
 @route('/signout')
-def signout():
+def signout_page():
 	response.delete_cookie("account", secret='secret_key')
 	return redirect('/')
 
-@route('/<filename:re:.*\.png>') 
-def send_image(filename): 
-    return static_file(filename, root='', mimetype='image/png') 
+@route('/static/<filename>') 
+def server_static(filename): 
+    return static_file(filename, root='static') 
 
-run(host='0.0.0.0', port=80, debug=False, reloader=True)
-# run(host='localhost', port=8080, debug=True, reloader=True)
+@error(404)
+def error404(error):
+	return template("404")
+
+# run(host='0.0.0.0', port=80, debug=False, reloader=True)
+run(host='localhost', port=8080, debug=True, reloader=True)
 

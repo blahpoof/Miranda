@@ -1,3 +1,5 @@
+<link rel="stylesheet" type="text/css" href="static/demo.css" />
+
 <ul style="list-style-type:none; margin:0; padding:0;">	
 	<li><a href="/">Home</a></li>
 	%if signed_in:
@@ -7,12 +9,15 @@
 </ul>
 
 <table style="float: left;" border='1' id="results">
-	%if d:
+	%if l:
 		<caption><b>Results</b></caption>
-	%for key in d:
+	%end
+	%if not l:
+		<caption><b>No Results Found.</b></caption>
+	%end
+	%for url in l:
 		<tr>
-			<td>{{key}}</td>
-			<td>{{d[key]}}</td>
+			<td>{{url}}</td>
 		</tr>
 	%end
 </table>
