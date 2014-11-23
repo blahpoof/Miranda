@@ -3,7 +3,7 @@
 <ul>	
 	<li><a href="/">Home</a></li>
 	%if signed_in:
-		<li>{{email}}</li>
+		<li style="margin-top: 1em">{{email}}</li>
 		<li><a href="/signout">Sign Out</a></li>
 	%end
 	%if not signed_in:

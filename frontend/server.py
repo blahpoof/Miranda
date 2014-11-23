@@ -33,9 +33,13 @@ cur = db_conn.cursor()
 # Routing -----------------------------------------
 
 # oauth2 flow
+# flow = flow_from_clientsecrets('client_secrets.json',
+# 		scope='https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/userinfo.email',
+# 		redirect_uri="http://ec2-54-173-107-230.compute-1.amazonaws.com/redirect")
+
 flow = flow_from_clientsecrets('client_secrets.json',
 		scope='https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/userinfo.email',
-		redirect_uri="http://ec2-54-173-107-230.compute-1.amazonaws.com/redirect")
+		redirect_uri="http://localhost:8080/redirect")
 		
 @route('/')
 def query_page():
@@ -52,38 +56,23 @@ def query_page():
 	keywords = request.GET.get('keywords', '').strip()
 
 	if keywords:
-		word = keywords.lower().strip().split()[0]
-		cur.execute('SELECT word_id FROM lexicon WHERE word=?', (word,))
-		word = cur.fetchone()[0]
-
 		doc_ids = []
 		urls = []
-		if word:
+
+		word = keywords.lower().strip().split()[0]
+		cur.execute('SELECT word_id FROM lexicon WHERE word=?', (word,))
+		result = cur.fetchone()
+		if result:
+			word = result[0]
+
 			for row in cur.execute('SELECT doc_id FROM inverted WHERE word_id=?', (word,)):
 				doc_ids.append(row[0])
 
 			for doc_id in doc_ids:
 				for row in cur.execute('SELECT url FROM documents WHERE doc_id=? ORDER BY pagerank DESC', (doc_id,)):
-					urls.append(row[0])
-
-
-		
-
-	# Process query results
-	# if keywords: 
-	# 	query = {} 
-	# 	words = keywords.lower().strip().split()
-		
-	# 	for word in words:
-			
-	# 		# Update results and user history 
-	# 		if curr_user:
-	# 			if word in curr_user.history:
-	# 				curr_user.history.remove(word)
-	# 			curr_user.history.append(word)
-	# 			while len(curr_user.history) > 10:
-	# 				curr_user.history.pop(0)
-	# 		query[word] = query.get(word, 0) + 1
+					url = row[0]
+					if url not in urls:
+						urls.append(url)
 
 		if curr_user:
 			return template("keywords", signed_in=True, email=curr_user.email, l=urls) # display tables using HTML template
