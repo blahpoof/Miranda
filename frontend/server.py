@@ -33,13 +33,13 @@ cur = db_conn.cursor()
 # Routing -----------------------------------------
 
 # oauth2 flow
-# flow = flow_from_clientsecrets('client_secrets.json',
-# 		scope='https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/userinfo.email',
-# 		redirect_uri="http://ec2-54-173-107-230.compute-1.amazonaws.com/redirect")
-
 flow = flow_from_clientsecrets('client_secrets.json',
 		scope='https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/userinfo.email',
-		redirect_uri="http://localhost:8080/redirect")
+		redirect_uri="http://ec2-54-173-107-230.compute-1.amazonaws.com/redirect")
+
+# flow = flow_from_clientsecrets('client_secrets.json',
+# 		scope='https://www.googleapis.com/auth/plus.me https://www.googleapis.com/auth/userinfo.email',
+# 		redirect_uri="http://localhost:8080/redirect")
 		
 @route('/')
 def query_page():
@@ -132,6 +132,6 @@ def server_static(filename):
 def error404(error):
 	return template("404")
 
-# run(host='0.0.0.0', port=80, debug=False, reloader=True)
-run(host='localhost', port=8080, debug=True, reloader=True)
+run(host='0.0.0.0', port=80, debug=False, reloader=True)
+# run(host='localhost', port=8080, debug=True, reloader=True)
 
