@@ -1,0 +1,30 @@
+Public IP Address: 54.173.107.230
+
+No extra Google APIs
+
+Benchmarking:
+
+	Setup:
+		Connect to server via public IP address from a separate machine. 
+		Send requests using Apache Bench. 
+
+	Method: 
+		To determine the maximum # of concurrent connections, we ran the command:
+
+			ab -n 1000 -c CONCURRENCY http://54.173.107.230/?keywords=toronto
+
+		increasing CONCURRENCY by 1 until connections start to drop. We found that at 25 concurrent
+		connections, requests were never dropped, whereas at 26 concurrent connections, a few 
+		requests would be dropped per test. 
+		We then ran 10 tests at each of 25, 50, and 100 concurrent connections to determine
+		the average % of requests dropped. 
+
+		The max requests per second from those 10 tests run at 25 concurrent connections was 
+		determined to be the max RPS sustainable at maximum number of connections. 
+
+		The mean times per request of each test run at 25 concurrent connections were averaged
+		to determine the average time per request at maximum number of connections. 
+
+	Results: 
+		RESULTS.txt
+
