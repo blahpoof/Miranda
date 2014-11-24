@@ -9,6 +9,13 @@
 	%end
 </ul>
 
+<div>
+	<form action='/', method="GET">
+		Keyword: <input name="keywords" type="text"/>
+		<input value="Submit" type="submit"/>
+	</form>
+</div>
+
 <table style="float: left;" border='1' id="results" class="paginated">
 	%if not l:
 		<b>No Results Found.</b>
