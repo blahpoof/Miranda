@@ -341,6 +341,9 @@ class crawler(object):
         """Crawl the web!"""
         seen = set()
 	cur = self.db_conn.cursor()
+	cur.execute('DROP TABLE lexicon')
+	cur.execute('DROP TABLE documents')
+	cur.execute('DROP TABLE inverted')
 	cur.execute('CREATE TABLE IF NOT EXISTS lexicon(word_id INTEGER PRIMARY KEY, word TEXT);')
 	cur.execute('CREATE TABLE IF NOT EXISTS documents(doc_id INTEGER PRIMARY KEY, url TEXT, pagerank FLOAT);')
 	cur.execute('CREATE TABLE IF NOT EXISTS inverted(word_id INTEGER, doc_id INTEGER);')
