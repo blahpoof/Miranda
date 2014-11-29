@@ -19,6 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import re
 import urllib2
 import urlparse
 from BeautifulSoup import *
@@ -127,9 +128,8 @@ class crawler(object):
 	self.db_conn = db_conn
         
     
-    # TODO remove me in real version
     def _mock_insert_document(self, url):
-        """A function that pretends to insert a url into a document db table
+        """A function that inserts a url into a document db table
         and then returns that newly inserted document's id."""
 	cur = self.db_conn.cursor()
 	cur.execute('INSERT INTO documents(url, pagerank) VALUES(?,0);', (url,))
@@ -137,9 +137,8 @@ class crawler(object):
 	ret_id = cur.fetchone()[0]
         return ret_id
     
-    # TODO remove me in real version
     def _mock_insert_word(self, word):
-        """A function that pretends to inster a word into the lexicon db table
+        """A function that inserts a word into the lexicon db table
         and then returns that newly inserted word's id."""
         cur = self.db_conn.cursor()
 	cur.execute('INSERT INTO lexicon(word) VALUES(?);', (word,))
@@ -155,7 +154,7 @@ class crawler(object):
         if word_id != None:
             return word_id[0]
         
-        # TODO: 1) add the word to the lexicon, if that fails, then the
+        #       1) add the word to the lexicon, if that fails, then the
         #          word is in the lexicon
         #       2) query the lexicon for the id assigned to this word, 
         #          store it in the word id cache, and return the id.
@@ -173,7 +172,7 @@ class crawler(object):
         if doc_id != None:
             return doc_id[0]
         
-        # TODO: just like word id cache, but for documents. if the document
+        #       just like word id cache, but for documents. if the document
         #       doesn't exist in the db then only insert the url and leave
         #       the rest to their defaults.
         
@@ -202,9 +201,10 @@ class crawler(object):
     def _visit_title(self, elem):
         """Called when visiting the <title> tag."""
         title_text = self._text_of(elem).strip()
+        title_text = str(title_text.encode('ascii', 'ignore'))
+        cur = self.db_conn.cursor()
+        cur.execute("UPDATE documents SET title=? WHERE doc_id=?", (title_text, self._curr_doc_id,))
         print "document title="+ repr(title_text)
-
-        # TODO update document title for document id self._curr_doc_id
     
     def _visit_a(self, elem):
         """Called when visiting <a> tags."""
@@ -223,10 +223,9 @@ class crawler(object):
         # other document
         self.add_link(self._curr_doc_id, self.document_id(dest_url))
 
-        # TODO add title/alt/text to index for destination url
     
     def _add_words_to_document(self):
-        # TODO: knowing self._curr_doc_id and the list of all words and their
+        #       knowing self._curr_doc_id and the list of all words and their
         #       font sizes (in self._curr_words), add all the words into the
         #       database for this document
         for word in self._curr_words:
@@ -304,6 +303,10 @@ class crawler(object):
         
         tag = soup.html
         stack = [DummyTag(), soup.html]
+        des = soup.findAll("meta", attrs={'name' : re.compile("description")})
+        if des:
+            cur = self.db_conn.cursor()
+            cur.execute("UPDATE documents SET description=? WHERE doc_id=?", (des[0]['content'], self._curr_doc_id,))
         soup = BeautifulSoup('<b class="boldest">Extremely bold</b>')
         typetag = soup.b
         while tag and tag.next:
@@ -345,7 +348,7 @@ class crawler(object):
 	cur.execute('DROP TABLE documents')
 	cur.execute('DROP TABLE inverted')
 	cur.execute('CREATE TABLE IF NOT EXISTS lexicon(word_id INTEGER PRIMARY KEY, word TEXT);')
-	cur.execute('CREATE TABLE IF NOT EXISTS documents(doc_id INTEGER PRIMARY KEY, url TEXT, pagerank FLOAT);')
+	cur.execute('CREATE TABLE IF NOT EXISTS documents(doc_id INTEGER PRIMARY KEY, url TEXT, pagerank FLOAT, title TEXT, description TEXT);')
 	cur.execute('CREATE TABLE IF NOT EXISTS inverted(word_id INTEGER, doc_id INTEGER);')
 
         while len(self._url_queue):
@@ -388,7 +391,7 @@ class crawler(object):
 if __name__ == "__main__":
     db_conn = lite.connect("dbFile.db")
     bot = crawler(db_conn, "urls.txt")
-    bot.crawl(depth=1)
+    bot.crawl(depth=10)
     pagerank = page_rank(bot.links)
     cur = db_conn.cursor()
     for doc_id, rank in pagerank.iteritems():
@@ -402,8 +405,8 @@ if __name__ == "__main__":
 	    pass
 	print rank, doc_id
         cur.execute('UPDATE documents SET pagerank=? WHERE doc_id=?;', (rank, doc_id))
-    print bot.get_inverted_index()
-    print bot.get_resolved_inverted_index()
+    #print bot.get_inverted_index()
+    #print bot.get_resolved_inverted_index()
     db_conn.commit()
     db_conn.close()
 
