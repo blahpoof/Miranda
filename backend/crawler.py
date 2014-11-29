@@ -128,9 +128,8 @@ class crawler(object):
 	self.db_conn = db_conn
         
     
-    # TODO remove me in real version
     def _mock_insert_document(self, url):
-        """A function that pretends to insert a url into a document db table
+        """A function that inserts a url into a document db table
         and then returns that newly inserted document's id."""
 	cur = self.db_conn.cursor()
 	cur.execute('INSERT INTO documents(url, pagerank) VALUES(?,0);', (url,))
@@ -138,9 +137,8 @@ class crawler(object):
 	ret_id = cur.fetchone()[0]
         return ret_id
     
-    # TODO remove me in real version
     def _mock_insert_word(self, word):
-        """A function that pretends to inster a word into the lexicon db table
+        """A function that inserts a word into the lexicon db table
         and then returns that newly inserted word's id."""
         cur = self.db_conn.cursor()
 	cur.execute('INSERT INTO lexicon(word) VALUES(?);', (word,))
@@ -156,7 +154,7 @@ class crawler(object):
         if word_id != None:
             return word_id[0]
         
-        # TODO: 1) add the word to the lexicon, if that fails, then the
+        #       1) add the word to the lexicon, if that fails, then the
         #          word is in the lexicon
         #       2) query the lexicon for the id assigned to this word, 
         #          store it in the word id cache, and return the id.
@@ -174,7 +172,7 @@ class crawler(object):
         if doc_id != None:
             return doc_id[0]
         
-        # TODO: just like word id cache, but for documents. if the document
+        #       just like word id cache, but for documents. if the document
         #       doesn't exist in the db then only insert the url and leave
         #       the rest to their defaults.
         
@@ -207,8 +205,6 @@ class crawler(object):
         cur = self.db_conn.cursor()
         cur.execute("UPDATE documents SET title=? WHERE doc_id=?", (title_text, self._curr_doc_id,))
         print "document title="+ repr(title_text)
-
-        # TODO update document title for document id self._curr_doc_id
     
     def _visit_a(self, elem):
         """Called when visiting <a> tags."""
@@ -227,10 +223,9 @@ class crawler(object):
         # other document
         self.add_link(self._curr_doc_id, self.document_id(dest_url))
 
-        # TODO add title/alt/text to index for destination url
     
     def _add_words_to_document(self):
-        # TODO: knowing self._curr_doc_id and the list of all words and their
+        #       knowing self._curr_doc_id and the list of all words and their
         #       font sizes (in self._curr_words), add all the words into the
         #       database for this document
         for word in self._curr_words:
