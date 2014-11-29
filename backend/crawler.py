@@ -19,6 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
+import re
 import urllib2
 import urlparse
 from BeautifulSoup import *
@@ -202,6 +203,9 @@ class crawler(object):
     def _visit_title(self, elem):
         """Called when visiting the <title> tag."""
         title_text = self._text_of(elem).strip()
+        title_text = str(title_text.encode('ascii', 'ignore'))
+        cur = self.db_conn.cursor()
+        cur.execute("UPDATE documents SET title=? WHERE doc_id=?", (title_text, self._curr_doc_id,))
         print "document title="+ repr(title_text)
 
         # TODO update document title for document id self._curr_doc_id
@@ -304,6 +308,10 @@ class crawler(object):
         
         tag = soup.html
         stack = [DummyTag(), soup.html]
+        des = soup.findAll("meta", attrs={'name' : re.compile("description")})
+        if des:
+            cur = self.db_conn.cursor()
+            cur.execute("UPDATE documents SET description=? WHERE doc_id=?", (des[0]['content'], self._curr_doc_id,))
         soup = BeautifulSoup('<b class="boldest">Extremely bold</b>')
         typetag = soup.b
         while tag and tag.next:
@@ -345,7 +353,7 @@ class crawler(object):
 	cur.execute('DROP TABLE documents')
 	cur.execute('DROP TABLE inverted')
 	cur.execute('CREATE TABLE IF NOT EXISTS lexicon(word_id INTEGER PRIMARY KEY, word TEXT);')
-	cur.execute('CREATE TABLE IF NOT EXISTS documents(doc_id INTEGER PRIMARY KEY, url TEXT, pagerank FLOAT);')
+	cur.execute('CREATE TABLE IF NOT EXISTS documents(doc_id INTEGER PRIMARY KEY, url TEXT, pagerank FLOAT, title TEXT, description TEXT);')
 	cur.execute('CREATE TABLE IF NOT EXISTS inverted(word_id INTEGER, doc_id INTEGER);')
 
         while len(self._url_queue):
@@ -388,7 +396,7 @@ class crawler(object):
 if __name__ == "__main__":
     db_conn = lite.connect("dbFile.db")
     bot = crawler(db_conn, "urls.txt")
-    bot.crawl(depth=1)
+    bot.crawl(depth=10)
     pagerank = page_rank(bot.links)
     cur = db_conn.cursor()
     for doc_id, rank in pagerank.iteritems():
@@ -402,8 +410,8 @@ if __name__ == "__main__":
 	    pass
 	print rank, doc_id
         cur.execute('UPDATE documents SET pagerank=? WHERE doc_id=?;', (rank, doc_id))
-    print bot.get_inverted_index()
-    print bot.get_resolved_inverted_index()
+    #print bot.get_inverted_index()
+    #print bot.get_resolved_inverted_index()
     db_conn.commit()
     db_conn.close()
 
