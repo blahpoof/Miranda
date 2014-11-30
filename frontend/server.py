@@ -8,7 +8,7 @@ import sqlite3 as sql
 import httplib2
 import spell_correct as spell
 
-LOCAL = True
+LOCAL = False
 
 # Classes -------------------------------------------------------
 class User(object):
