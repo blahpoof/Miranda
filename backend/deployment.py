@@ -3,8 +3,8 @@ import os
 import time
 from boto.manage.cmdshell import sshclient_from_instance
 conn = boto.ec2.connect_to_region("us-east-1",
-                                  aws_access_key_id = 'AKIAI4UOBMQA3NYM6SDA',
-                                  aws_secret_access_key = 'OxTfRpA0XQKynfrNsWOXUrJwCUAl1lHu8l8VgcTf')
+                                  aws_access_key_id = '<YOUR ID>',
+                                  aws_secret_access_key = '<YOUR KEY>')
 key_pair = conn.create_key_pair("testgood")
 key_pair.save(os.getcwd())
 sec_group = conn.create_security_group('testcsc326-group', 'uoft')
