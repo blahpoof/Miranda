@@ -344,9 +344,9 @@ class crawler(object):
         """Crawl the web!"""
         seen = set()
 	cur = self.db_conn.cursor()
-	cur.execute('DROP TABLE lexicon')
-	cur.execute('DROP TABLE documents')
-	cur.execute('DROP TABLE inverted')
+	cur.execute('DROP TABLE IF EXISTS lexicon')
+	cur.execute('DROP TABLE IF EXISTS documents')
+	cur.execute('DROP TABLE IF EXISTS inverted')
 	cur.execute('CREATE TABLE IF NOT EXISTS lexicon(word_id INTEGER PRIMARY KEY, word TEXT);')
 	cur.execute('CREATE TABLE IF NOT EXISTS documents(doc_id INTEGER PRIMARY KEY, url TEXT, pagerank FLOAT, title TEXT, description TEXT);')
 	cur.execute('CREATE TABLE IF NOT EXISTS inverted(word_id INTEGER, doc_id INTEGER);')
@@ -391,7 +391,7 @@ class crawler(object):
 if __name__ == "__main__":
     db_conn = lite.connect("dbFile.db")
     bot = crawler(db_conn, "urls.txt")
-    bot.crawl(depth=10)
+    bot.crawl(depth=3)
     pagerank = page_rank(bot.links)
     cur = db_conn.cursor()
     for doc_id, rank in pagerank.iteritems():

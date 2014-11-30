@@ -1,25 +1,33 @@
-<link rel="stylesheet" type="text/css" href="static/demo.css" />
+<link rel="stylesheet" type="text/css" href="static/css/demo.css" />
 
-
-<ul style="list-style-type:none; margin:0; padding:0;">	
-	<li style=><a href="/">Home</a></li>
+<ul>	
+	<li><a href="/">Home</a></li>
 	%if signed_in:
-		<li>{{email}}</li>
+		<li style="margin-top: 1em">{{email}}</li>
 		<li><a href="/signout">Sign Out</a></li>
+	%end
+	%if not signed_in:
+		<li><a href="/login">Sign in</a></li>
 	%end
 </ul>
 
 <div>
 	<form action='/', method="GET">
-		Keyword: <input name="keywords" type="text"/>
-		<input value="Submit" type="submit"/>
+		<input name="keywords" type="text"/>
+		<input value="Search" type="submit"/>
 	</form>
 </div>
 
+%if not l:
+	<li><b>No Results Found.</b></li>
+%end
+
+%if corr:
+	<li style="margin-top: 1em;">Did you mean <a href="/?keywords={{corr}}">{{corr}}</a>?</li>
+%end
+
 <table style="float: left;" border='1' id="results" class="paginated">
-	%if not l:
-		<b>No Results Found.</b>
-	%end
+	
 	%if l:
 		<thead>
 			<tr>
@@ -31,11 +39,14 @@
 	<tbody>	
 	%for url in l:	
 		<tr>
-			<td><a href="{{url}}">{{url}}</a></td>
+			<td>
+				<a href="{{url[0]}}">{{url[1]}}</a>
+				<p>{{url[0]}}</p>
+			</td>
 		</tr>
 	%end
 	</tbody>
 </table>
 
-<script src="static/jquery.min.js"></script>
-<script src="static/pagination.js"></script>
+<script src="static/js/jquery.min.js"></script>
+<script src="static/js/pagination.js"></script>

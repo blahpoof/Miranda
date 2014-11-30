@@ -1,4 +1,4 @@
-<link rel="stylesheet" type="text/css" href="static/demo.css" />
+<link rel="stylesheet" type="text/css" href="static/css/demo.css" />
 
 <ul>	
 	<li><a href="/">Home</a></li>
@@ -11,11 +11,13 @@
 	%end
 </ul>
 
-<img src="static/logo.png">
+<img src="static/images/logo.png">
 
 <div>
 	<form action='/', method="GET">
-		Keyword: <input name="keywords" type="text"/>
-		<input value="Submit" type="submit"/>
+		<input name="keywords" type="text"/>
+		<input value="Search" type="submit"/>
 	</form>
 </div>
+
+
